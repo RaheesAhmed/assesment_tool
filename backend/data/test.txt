@@ -1,0 +1,92 @@
+To integrate the data from the Leadership_Framework.csv with your existing code, you'll need to read this CSV file, parse the data, and then use this data to enhance the logic in your application for classifying responsibility levels and generating personalized development plans. Let's break down the steps to handle this:
+
+Step 1: Read and Parse the CSV Data
+You can use the csv-parse library to read the Leadership_Framework.csv and convert it into a usable format in your application. Here’s a way to modify your existing loadCsvData function to make it reusable for any CSV file and return its content:
+
+javascript
+Copy code
+import { createReadStream } from 'fs';
+import { parse } from 'csv-parse';
+
+// Generic function to load CSV data
+const loadCsvData = async (csvPath) => {
+    const records = [];
+    return new Promise((resolve, reject) => {
+        createReadStream(csvPath)
+            .pipe(parse({ columns: true, skip_empty_lines: true }))
+            .on('data', (record) => records.push(record))
+            .on('end', () => {
+                console.log('CSV data loaded successfully:', csvPath);
+                resolve(records);
+            })
+            .on('error', (error) => {
+                console.error('Failed to load CSV data:', error);
+                reject(error);
+            });
+    });
+};
+
+// Use this function to load your Leadership_Framework.csv
+const leadershipData = await loadCsvData('path/to/Leadership_Framework.csv');
+Step 2: Store and Utilize the Loaded Data
+Once you have loaded the Leadership_Framework.csv, store this data in a way that is easy to access when you need to classify a user or generate a development plan. You could consider using a JavaScript object or a Map where the keys could be the responsibility level, and the values are the corresponding data.
+
+javascript
+Copy code
+let leadershipFramework = {};
+
+leadershipData.forEach(item => {
+    leadershipFramework[item['Responsibility Level'].trim()] = {
+        description: item.Description.trim(),
+        v1: item.v1.0.trim(),
+        v2: item.v2.0.trim()
+    };
+});
+Step 3: Enhance Classification and Plan Generation Logic
+Now that you have the leadership data loaded, you can utilize this information in your classifyResponsibilityLevel function to provide more detailed classifications and use the v1.0 or v2.0 descriptions in generating personalized development plans:
+
+javascript
+Copy code
+// Enhance the classifyResponsibilityLevel function to use leadershipFramework data
+const classifyResponsibilityLevel = (userData) => {
+    let level = 'Individual Contributor'; // Default level
+
+    // Existing logic here...
+    // Further refine this logic by incorporating more detailed decision making based on leadershipFramework data
+
+    // Return a more detailed response
+    return {
+        level,
+        description: leadershipFramework[level]?.description,
+        versionInfo: {
+            v1: leadershipFramework[level]?.v1,
+            v2: leadershipFramework[level]?.v2
+        }
+    };
+};
+
+// Use the above classification to generate a personalized development plan
+const generateDevelopmentPlan = (userData) => {
+    const classification = classifyResponsibilityLevel(userData);
+    const planTemplate = `Development Plan for ${userData.name}: ${classification.description}`;
+
+    // Include more personalized content based on versionInfo or other attributes
+    return planTemplate;
+};
+Step 4: Use the Data in API Responses
+When handling API requests, utilize this enhanced logic to provide responses that are tailored based on the loaded CSV data:
+
+javascript
+Copy code
+export const POST = async (req) => {
+    try {
+        const userData = await req.json();
+        const plan = generateDevelopmentPlan(userData);
+
+        return NextResponse.json({ plan });
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to classify', details: error }, { status: 500 });
+    }
+};
+This structure not only allows you to make full use of the CSV data but also keeps your code modular and clean.
+
