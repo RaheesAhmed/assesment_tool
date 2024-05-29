@@ -5,6 +5,8 @@ import cors from "cors";
 import { inputSchema, getQuestionsByLevel } from "./functions/input_schema.js";
 import { analyzeResponses } from "./functions/analyze_responses.js";
 import { GenerateAssesment } from "./functions/generate_assesment.js";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 

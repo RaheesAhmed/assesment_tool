@@ -1,66 +1,102 @@
-import {OpenAI} from 'openai';
-import dotenv from 'dotenv';
-import {main} from './upload_files';
+import { OpenAI } from "openai";
+import dotenv from "dotenv";
+
 dotenv.config();
 
-
-interface apiKey {
-    apiKey: string;
-}
-
-interface assistantId {
-    assistantId: string;
-}
-
-
-
-const apiKey = process.env.OPENAI_API_KEY;
-const assistantId= process.env.OPENAI_ASSISTANT_ID;
+const apiKey = "sk-rahees-Y6clJBmGm1xVtMkxRb6DT3BlbkFJmnrvAHECFSAqiqbGg2eP";
+const assistantId = "asst_fCWjCF3XVeiKi74Ecd5ovTiz";
 if (!apiKey) {
-    throw new Error('OpenAI API key is missing');
+  throw new Error("OpenAI API key is missing");
 }
 
-const openai = new OpenAI({apiKey});
-
+const openai = new OpenAI({ apiKey });
 
 export const updateAssistant = async () => {
-    try{
-
-       
-    const myUpdatedAssistant = await openai.beta.assistants.update(assistantId, {
-
-        instructions:
-        `You are an AI Assistant specialized in assessing management roles and providing personalized development plans based on user responses. You analyze user inputs to classify their managerial and leadership capabilities and offer tailored recommendations. 
+  try {
+    const myUpdatedAssistant = await openai.beta.assistants.update(
+      assistantId,
+      {
+        instructions: `You are an AI Assistant specialized in assessing management roles and providing personalized development plans based on user responses. You will get the responsibility levels and all required questions and answers from the user. Your main tasks are: 
+read the json file and get the idea about roles and responsibility levels and its descriptions for different roles and than 
  
 **Offer Personalized Development Plans**: Generate customized development plans for users based on their responses and classified roles. These plans should include specific recommendations for building teams, developing others, leading teams to achieve results, managing performance, business acumen, personal development, leadership communication, and employee relations.
 
 - Provide clear, concise, and actionable recommendations.
 - Adapt your advice based on the user's responses and demographic information.
-    `,
-      name: "Manager Assessment Assistant",
-      tools: [{ type: "code_interpreter" }, { type: "file_search" }], 
-      model: "gpt-4-turbo-preview", 
-      top_p: 0.9,
-      tool_resources: {
-        code_interpreter: {
-            file_ids: [
-                'file-ypXVzoPt4osxlL3WKR6zjex3',
-                'file-4aH6oANJgQpOee5MKYJ9RX1U',
-                'file-N3RsAgblRDARPfMw9sMGXuN4',
-                'file-WS1XIkqbBGgAiAFYQfz2I1bK',
-                'file-ifbaakIr5cpoN0DYj2iJFEal'
-              ]
-        },
-        file_search: {
-            vector_store_ids: ["vs_fSGW5AoAzC7RVer0Uqzo76dc"]
-          }
+always give the response in json format like {} no need to add json{} just return the json object like this :{}
+        `,
+        name: "Manager Assessment Assistant",
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "readJsonFile",
+              description:
+                "Read the JSON file containing responsibility levels and its descriptions for different roles to understand the roles and responsibilities better.",
+              parameters: {
+                type: "object",
+                properties: {
+                  filePath: {
+                    type: "string",
+                    description: "The path to the JSON file",
+                  },
+                },
+                required: ["filePath"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "getResponsibilityLevel",
+              description:
+                "Get the responsibility levels from the JSON file for different roles to understand the roles and responsibilities better.",
+              parameters: {
+                type: "object",
+                properties: {},
+                required: [],
+              },
+            },
+          },
+          { type: "code_interpreter", type: "file_search" },
+        ],
+        model: "gpt-4o",
+      }
+    );
+
+    console.log(myUpdatedAssistant);
+
+    return myUpdatedAssistant;
+  } catch (error) {
+    throw new Error(`Failed to update assistant response: ${error}`);
+  }
+};
+
+// Function to read the JSON file
+const readJsonFile = (filePath) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, "utf8", (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(JSON.parse(data));
       }
     });
+  });
+};
 
-      console.log(myUpdatedAssistant);
+// Function to get data from the JSON
+export const getResponsibilityLevel = async () => {
+  try {
+    const filePath = path.join(
+      process.cwd(),
+      "../data/Responsibility_Level.json"
+    );
+    const data = await readJsonFile(filePath);
+    return data;
+  } catch (error) {
+    console.error("Error reading JSON file:", error);
+  }
+};
 
-      return myUpdatedAssistant;
-    } catch (error) {
-        throw new Error(`Failed to update assistant response: ${error}`);
-    }
-}
+await updateAssistant();
