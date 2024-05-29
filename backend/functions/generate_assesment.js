@@ -1,9 +1,7 @@
 import { OpenAI } from "openai";
 import dotenv from "dotenv";
-import { getResponsibilityLevel } from "./framework.js";
-import { readJsonFile } from "./framework.js";
-import fs from "fs";
-import path from "path";
+import { getResponsibilityLevel } from "../functions/framework.js";
+import { readJsonFile } from "../functions/framework.js";
 
 dotenv.config();
 
@@ -20,15 +18,14 @@ if (!assistantId) {
   throw new Error("OpenAI Assistant ID is missing");
 }
 
-export const GenerateAssesment = async (message) => {
+export const chatWithAssistant = async (message) => {
   try {
     const assistant = await openai.beta.assistants.retrieve(assistantId);
     console.log("assistant retrieved");
-
     // Create a thread using the assistantId
     const thread = await openai.beta.threads.create();
-    console.log("thread created");
 
+    console.log("thread created");
     // Pass in the user question into the existing thread
     await openai.beta.threads.messages.create(thread.id, {
       role: "user",
@@ -41,7 +38,6 @@ export const GenerateAssesment = async (message) => {
       assistant_id: assistant.id,
     });
     console.log("run created");
-
     // Fetch run-status
     let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
 
@@ -55,13 +51,12 @@ export const GenerateAssesment = async (message) => {
         const toolCalls =
           runStatus.required_action.submit_tool_outputs.tool_calls;
         console.log("toolCalls");
-
         const toolOutputs = await Promise.all(
           toolCalls.map(async (tool) => {
             if (tool.function.name === "readJsonFile") {
               const filePath = path.join(
                 process.cwd(),
-                "./data/Responsibility_Level.json"
+                "backend/data/Responsibility_Level.json"
               );
               const output = await readJsonFile(filePath);
               return {

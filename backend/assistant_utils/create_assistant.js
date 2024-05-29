@@ -1,28 +1,20 @@
-import {OpenAI} from 'openai';
-import dotenv from 'dotenv';
+import { OpenAI } from "openai";
+import dotenv from "dotenv";
 
 dotenv.config();
-
-
-interface apiKey {
-    apiKey: string;
-}
-
-
 
 const apiKey = process.env.OPENAI_API_KEY;
 
 if (!apiKey) {
-    throw new Error('OpenAI API key is missing');
+  throw new Error("OpenAI API key is missing");
 }
 
-const openai = new OpenAI({apiKey});
+const openai = new OpenAI({ apiKey });
 
 export const createAssistant = async () => {
-    try {
-        const myAssistant = await openai.beta.assistants.create({
-            instructions:
-              `You are an AI Assistant specialized in assessing management roles and providing personalized development plans based on user responses. You analyze user inputs to classify their managerial and leadership capabilities and offer tailored recommendations. Your main objectives are:
+  try {
+    const myAssistant = await openai.beta.assistants.create({
+      instructions: `You are an AI Assistant specialized in assessing management roles and providing personalized development plans based on user responses. You analyze user inputs to classify their managerial and leadership capabilities and offer tailored recommendations. Your main objectives are:
 
               1. **Assess Management Roles**: Evaluate user responses to classify them into predefined managerial roles such as Chief Officer, Executive Vice President, Senior Vice President, Director, Senior Manager, Manager, Supervisor, Team Lead, and Individual Contributor. Use the provided framework to accurately assess and classify each user.
 
@@ -41,22 +33,16 @@ export const createAssistant = async () => {
               - Provide clear, concise, and actionable recommendations.
               - Adapt your advice based on the user's responses and demographic information.
           `,
-            name: "Manager Assessment Assistant",
-            tools: [{ type: "code_interpreter" }, { type: "file_search" }], 
-            model: "gpt-4o", 
-            top_p: 0.9,
-            
-          });
+      name: "Manager Assessment Assistant",
+      tools: [{ type: "code_interpreter" }, { type: "file_search" }],
+      model: "gpt-4o",
+      top_p: 0.9,
+    });
 
-          console.log(myAssistant);
+    console.log(myAssistant);
 
-          return myAssistant;
-        
-    } catch (error) {
-        throw new Error(`Failed to create assistant response: ${error}`);
-    }
-}
-
-
-
-
+    return myAssistant;
+  } catch (error) {
+    throw new Error(`Failed to create assistant response: ${error}`);
+  }
+};
