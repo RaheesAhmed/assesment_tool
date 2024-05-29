@@ -13,6 +13,9 @@ import { ThresHoldQuestion } from "@/components/ThresholdQuestion";
 import axios from "axios";
 import { ChoiceComponent } from "@/components/ChoiceComponent";
 import RoleComponent from "@/components/RoleComponent";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
 
 const GeneratePlan = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -350,27 +353,49 @@ const GeneratePlan = () => {
 
   const currentQuestion = questions[currentStep];
 
-  // Regex to split the assessment into sections
-  const splitAssessment = (assessment) => {
-    const sections = assessment.split(/(?=\n\n\*\*.*?\*\*\n\n)/);
-    return sections.map((section, index) => (
-      <div key={index} className="p-4 bg-gray-100 rounded-md shadow-sm mb-4">
-        <h3
-          className="text-xl font-semibold mb-2"
-          dangerouslySetInnerHTML={{
-            __html: section.split("\n\n")[0].replace(/\*\*/g, ""),
-          }}
-        />
-        <p
-          dangerouslySetInnerHTML={{
-            __html: section
-              .replace(section.split("\n\n")[0], "")
-              .replace(/\n/g, "<br />"),
-          }}
-        />
+  // Function to split the assessment into sections and format them for display
+const splitAssessment = (assessment) => {
+  const sections = JSON.parse(assessment).developmentPlan;
+  return Object.entries(sections).map(([key, value], index) => (
+    <div key={index} className="p-4 bg-gray-100 rounded-md shadow-sm mb-4" id="pdfContent">
+      <h3 className="text-xl font-semibold mb-2">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+      {value.actionPlan.map((plan, idx) => (
+        <div key={idx} className="mb-4">
+          <h4 className="text-lg font-semibold">{plan.action}</h4>
+          <p>{plan.description}</p>
+          <ul className="list-disc pl-5">
+            {plan.resources.map((resource, resIdx) => (
+              <li key={resIdx}>{resource}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <div>
+        <h4 className="text-lg font-semibold">Metrics:</h4>
+        <ul className="list-disc pl-5">
+          {value.metrics.map((metric, metIdx) => (
+            <li key={metIdx}>{metric}</li>
+          ))}
+        </ul>
       </div>
-    ));
-  };
+    </div>
+  ));
+};
+const downloadPdfDocument = () => {
+  const input = document.getElementById('pdfContent'); // Ensure you have a reference to the div
+  html2canvas(input)
+    .then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+      });
+      const imgProps= pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save("development_plan.pdf");
+    });
+};
 
   return (
     <div className="border-2 border-black flex-1">
@@ -381,11 +406,12 @@ const GeneratePlan = () => {
 
       {finalData ? (
         <div className="p-8 bg-white rounded-md shadow-md">
-          <h2 className="text-2xl font-bold mb-4">
-            Personalized Development Plan
-          </h2>
-          <div className="space-y-4">{splitAssessment(finalData)}</div>
-        </div>
+        <h2 className="text-2xl font-bold mb-4">Personalized Development Plan</h2>
+        <div className="space-y-4" >{splitAssessment(finalData)}</div>
+        <button onClick={downloadPdfDocument} className="mt-4 px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">
+            Download PDF
+          </button>
+      </div>
       ) : (
         <div className="flex flex-col md:flex-row bg-white">
           <div className="w-full bg-white overflow-hidden self-center flex-1">

@@ -20,10 +20,10 @@ const Header = ({ toolName }) => {
           <a href="#features" className="block px-3 py-2 md:inline md:py-0">Features</a>
           <a href="#framework" className="block px-3 py-2 md:inline md:py-0">Framework</a>
           <a href="/plan" className="block px-3 py-2 md:inline md:py-0">Assesment</a>
-          <button className='flex items-center p-1 space-x-2 bg-white text-black py-2 px-3  text-lg font-semibold shadow-lg hover:bg-gray-100 transition duration-300'>
+          {/* <button className='flex items-center p-1 space-x-2 bg-white text-black py-2 px-3  text-lg font-semibold shadow-lg hover:bg-gray-100 transition duration-300'>
   <FaLock className="text-xl" />
   <span>Login</span>
-</button>
+</button> */}
 
 
 
