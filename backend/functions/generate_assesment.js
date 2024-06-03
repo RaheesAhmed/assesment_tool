@@ -1,7 +1,6 @@
 import { OpenAI } from "openai";
 import dotenv from "dotenv";
 import { getResponsibilityLevel } from "../functions/framework.js";
-import { readJsonFile } from "../functions/framework.js";
 import fs from "fs";
 import path from "path";
 
@@ -31,7 +30,7 @@ export const GenerateAssesment = async (message) => {
     // Pass in the user question into the existing thread
     await openai.beta.threads.messages.create(thread.id, {
       role: "user",
-      content: `Based on the provided data, generate a personalized development plan : ${message}`,
+      content: `${message}`,
     });
 
     // Create a run
